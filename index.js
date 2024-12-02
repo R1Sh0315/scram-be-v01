@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require("express");
 const mg = require("mongoose");
 const Contact = require("./models/contact");
@@ -5,10 +6,16 @@ const bodyParser = require("body-parser");
 
 const app = express();
 app.use(bodyParser.json()); // Middleware to parse JSON bodies
-require("dotenv").config();
 
 const PORT = process.env.PORT || 3000;
-const URI = process.env.MONGO_URI;
+const mySecret = process.env["MONGODB_URI"];
+const URI = mySecret;
+
+
+if (!URI) {
+  console.error("MONGODB_URI is undefined. Please check your .env file.");
+  process.exit(1); // Stop the server if URI is not found
+}
 
 mg.connect(URI)
   .then(() => {
@@ -59,5 +66,5 @@ app.post("/create-contact", async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+  console.log(`Server is running on PORT : ${PORT}`);
 });
