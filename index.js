@@ -44,22 +44,19 @@ app.post("/api/v1/signup", async (req, res) => {
   }
 
   try {
-    // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ error: "User already exists" });
     }
 
-    // Create a new user
     const newUser = new User({
       email,
       password,
     });
 
-    await newUser.save(); // Save user to the database
+    await newUser.save(); // Save the user
 
-    // Generate a JWT token for the new user
-    const token = generateToken(newUser.userId);
+    const token = generateToken(newUser._id); // Using MongoDB _id for user identifier
 
     res.status(201).json({
       message: "User created successfully",
@@ -70,6 +67,7 @@ app.post("/api/v1/signup", async (req, res) => {
     res.status(500).json({ error: "Error during signup", details: err.message });
   }
 });
+
 
 // Signin route (login user)
 app.post("/api/v1/signin", async (req, res) => {
@@ -90,7 +88,7 @@ app.post("/api/v1/signin", async (req, res) => {
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
-    const token = generateToken(user.userId);
+    const token = generateToken(user._id); // Using MongoDB _id for user identifier
 
     res.status(200).json({
       message: "Sign in successful",
@@ -102,6 +100,24 @@ app.post("/api/v1/signin", async (req, res) => {
   }
 });
 
+//auth
+const authenticate = (req, res, next) => {
+  const token = req.header("Authorization")?.replace("Bearer ", "");
+
+  if (!token) {
+    return res.status(401).json({ error: "Access denied. No token provided." });
+  }
+
+  try {
+    const decoded = verifyToken(token);
+    req.userId = decoded.userId;
+    next(); // Continue to the next middleware or route handler
+  } catch (err) {
+    return res.status(401).json({ error: "Invalid or expired token" });
+  }
+};
+
+// contact 
 app.get("/api/v1/contacts",authenticate , async (req, res) => {
   try {
     const contacts = await Contact.find();
@@ -116,33 +132,19 @@ app.get("/api/v1/contacts",authenticate , async (req, res) => {
   }
 });
 
-const authenticate = (req, res, next) => {
-  const token = req.header("Authorization")?.replace("Bearer ", "");
 
-  if (!token) {
-    return res.status(401).json({ error: "Access denied. No token provided." });
-  }
-
-  try {
-    const decoded = verifyToken(token);
-    req.userId = decoded.userId;
-    next();
-  } catch (err) {
-    return res.status(401).json({ error: "Invalid or expired token" });
-  }
-};
-
-app.post("/api/v1/create-contact",authenticate,  async (req, res) => {
+// create-contact 
+app.post("/api/v1/create-contact", authenticate, async (req, res) => {
   const { name, number, contactType, link } = req.body;
 
   if (!name) {
-    res.status(400).send({ message: "name is required" });
+    return res.status(400).send({ message: "Name is required" });
   }
 
   try {
     const existingContact = await Contact.findOne({
       $or: [{ name: name }, { number: number }],
-    }); 
+    });
 
     if (existingContact) {
       return res.status(400).json({
@@ -151,28 +153,29 @@ app.post("/api/v1/create-contact",authenticate,  async (req, res) => {
     }
 
     const newContact = new Contact({
+      userId: req.userId, // Associate the contact with the authenticated user
       name,
       number,
       contactType,
       link: {
-        emaikID: link.email || "",
+        emailID: link.email || "",
         instaID: link.insta || "",
         facebookID: link.facebook || "",
         telegramID: link.telegram || "",
-        poortfolio: link.portfolio || "",
+        portfolio: link.portfolio || "",
       },
     });
-    await newContact.save(); // Save the contact to the database
-    res
-      .status(201)
-      .json({ message: "Contact created successfully", contact: newContact });
+
+    await newContact.save();
+    res.status(201).json({
+      message: "Contact created successfully",
+      contact: newContact,
+    });
   } catch (err) {
-    // Handle any errors
-    res
-      .status(500)
-      .json({ error: "Error creating contact", details: err.message });
+    res.status(500).json({ error: "Error creating contact", details: err.message });
   }
 });
+
 
 app.listen(PORT, () => {
   console.log(`Server is running on PORT : ${PORT}`);

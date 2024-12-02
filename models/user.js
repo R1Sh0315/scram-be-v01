@@ -1,10 +1,11 @@
-const mg = require("mongoose");
-const bcrypt = require("bcryptjs");
+const mg = require('mongoose');
+const bcrypt = require('bcryptjs');
 
+// User Schema
 const userSchema = new mg.Schema({
   email: {
     type: String,
-    require: true,
+    required: true,
     unique: true,
     lowercase: true,
   },
@@ -16,19 +17,22 @@ const userSchema = new mg.Schema({
     type: String,
     unique: true,
     required: true,
-    default: () => mg.Types.ObjectId().toString(), // Create a unique userId
-  },
+    default: function () {
+      return mg.Types.ObjectId().toString();
+    }
+  }
 });
 
-userSchema.pre("save", async function (next) {
-  this.password = await bcrypt.hash(this.password, 9);
+// Pre-save hook to hash password
+userSchema.pre('save', async function (next) {
+  if (!this.isModified('password')) return next();
+
+  this.password = await bcrypt.hash(this.password, 10);
 });
 
-userSchema.method.comparePassword = async function (password) {
-  return await bcrypt.compare(password, this.password);
-}
+// Method to compare password
+userSchema.methods.comparePassword = function (password) {
+  return bcrypt.compare(password, this.password);
+};
 
-
-const User = mg.model("User", userSchema);
-
-module.exports = User;
+module.exports = mg.model('User', userSchema);
