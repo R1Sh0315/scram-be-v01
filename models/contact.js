@@ -1,8 +1,8 @@
 const mg = require("mongoose");
 
 const contactSchema = new mg.Schema({
-  name: { type: String, require: true },
-  number: { type: String, required: true },
+  name: { type: String, require: true, unique: true, },
+  number: { type: String, required: true, unique: true, },
   contactType: { type: [String], require: true },
   link: {
     emailID: { type: String, default: "" },

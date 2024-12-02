@@ -48,6 +48,16 @@ app.post("api/v1/create-contact", async (req, res) => {
   }
 
   try {
+    const existingContact = await Contact.findOne({
+      $or: [{ name: name }, { number: number }],
+    }); // Check if contact with same name or number already exists
+
+    if (existingContact) {
+      return res.status(400).json({
+        error: "A contact with the same name or number already exists.",
+      });
+    }
+
     const newContact = new Contact({
       name,
       number,
