@@ -5,10 +5,10 @@ const bodyParser = require("body-parser");
 
 const app = express();
 app.use(bodyParser.json()); // Middleware to parse JSON bodies
+require("dotenv").config();
 
-const PORT = 3000;
-const URI =
-  "mongodb+srv://rishikeshbhalekar6:pevSaXNZRdW9YxMF@cluster0.twi3i.mongodb.net/";
+const PORT = process.env.PORT || 3000;
+const URI = process.env.MONGO_URI;
 
 mg.connect(URI)
   .then(() => {
