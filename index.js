@@ -37,7 +37,8 @@ app.post("/create-contact", async (req, res) => {
     const newContact = new Contact({
       name,
       number,
-      conatctType: {
+      contactType,
+      link: {
         emaikID: link.email || "",
         instaID: link.insta || "",
         facebookID: link.facebook || "",
