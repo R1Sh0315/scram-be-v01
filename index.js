@@ -1,8 +1,10 @@
-require("dotenv").config();
 const express = require("express");
 const mg = require("mongoose");
 const Contact = require("./models/contact");
 const bodyParser = require("body-parser");
+const User = require("./models/user");
+const { generateToken, verifyToken } = require("./utils/jwt");
+require("dotenv").config();
 
 const app = express();
 app.use(bodyParser.json()); // Middleware to parse JSON bodies
@@ -32,6 +34,37 @@ app.get("/", (req, res) => {
     .status(200);
 });
 
+// Signin route (login user)
+app.post("/api/v1/signin", async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ error: "Email and password are required" });
+  }
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
+
+    const isMatch = await user.comparePassword(password);
+    if (!isMatch) {
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
+
+    const token = generateToken(user.userId);
+
+    res.status(200).json({
+      message: "Sign in successful",
+      token,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Error during signin", details: err.message });
+  }
+});
+
 app.get("/api/v1/contacts", async (req, res) => {
   try {
     const contacts = await Contact.find();
@@ -46,7 +79,23 @@ app.get("/api/v1/contacts", async (req, res) => {
   }
 });
 
-app.post("/api/v1/create-contact", async (req, res) => {
+const authenticate = (req, res, next) => {
+  const token = req.header("Authorization")?.replace("Bearer ", "");
+
+  if (!token) {
+    return res.status(401).json({ error: "Access denied. No token provided." });
+  }
+
+  try {
+    const decoded = verifyToken(token);
+    req.userId = decoded.userId;
+    next();
+  } catch (err) {
+    return res.status(401).json({ error: "Invalid or expired token" });
+  }
+};
+
+app.post("/api/v1/create-contact", authenticate, async (req, res) => {
   const { name, number, contactType, link } = req.body;
 
   if (!name) {
@@ -56,7 +105,7 @@ app.post("/api/v1/create-contact", async (req, res) => {
   try {
     const existingContact = await Contact.findOne({
       $or: [{ name: name }, { number: number }],
-    }); // Check if contact with same name or number already exists
+    }); 
 
     if (existingContact) {
       return res.status(400).json({
