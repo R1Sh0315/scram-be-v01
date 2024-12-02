@@ -11,7 +11,6 @@ const PORT = process.env.PORT || 3000;
 const mySecret = process.env["MONGODB_URI"];
 const URI = mySecret;
 
-
 if (!URI) {
   console.error("MONGODB_URI is undefined. Please check your .env file.");
   process.exit(1); // Stop the server if URI is not found
@@ -29,6 +28,14 @@ app.get("/", (req, res) => {
   res
     .send({
       msg: "root is working",
+    })
+    .status(200);
+});
+
+app.get("/api/v1/contacts", (req, res) => {
+  res
+    .send({
+      msg: "shoudl get contacts",
     })
     .status(200);
 });
