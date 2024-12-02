@@ -27,24 +27,30 @@ mg.connect(URI)
 app.get("/", (req, res) => {
   res
     .send({
-      msg: "root is working",
+      message: "root is working",
     })
     .status(200);
 });
 
-app.get("/api/v1/contacts", (req, res) => {
-  res
-    .send({
-      msg: "shoudl get contacts",
-    })
-    .status(200);
+app.get("/api/v1/contacts", async (req, res) => {
+  try {
+    const contacts = await Contact.find();
+    if (contacts.length === 0) {
+      return res.status(200).json({ message: "Collection is empty" });
+    }
+    return res.status(200).json({ contacts });
+  } catch (err) {
+    return res
+      .status(500)
+      .json({ error: "Error fetching contacts", details: err.message });
+  }
 });
 
 app.post("/api/v1/create-contact", async (req, res) => {
   const { name, number, contactType, link } = req.body;
 
   if (!name) {
-    res.status(400).send({ msg: "name is required" });
+    res.status(400).send({ message: "name is required" });
   }
 
   try {
@@ -73,7 +79,7 @@ app.post("/api/v1/create-contact", async (req, res) => {
     await newContact.save(); // Save the contact to the database
     res
       .status(201)
-      .json({ msg: "Contact created successfully", contact: newContact });
+      .json({ message: "Contact created successfully", contact: newContact });
   } catch (err) {
     // Handle any errors
     res
