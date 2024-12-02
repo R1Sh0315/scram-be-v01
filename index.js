@@ -34,6 +34,43 @@ app.get("/", (req, res) => {
     .status(200);
 });
 
+
+// Signup route (register a new user)
+app.post("/api/v1/signup", async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ error: "Email and password are required" });
+  }
+
+  try {
+    // Check if user already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ error: "User already exists" });
+    }
+
+    // Create a new user
+    const newUser = new User({
+      email,
+      password,
+    });
+
+    await newUser.save(); // Save user to the database
+
+    // Generate a JWT token for the new user
+    const token = generateToken(newUser.userId);
+
+    res.status(201).json({
+      message: "User created successfully",
+      token,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Error during signup", details: err.message });
+  }
+});
+
 // Signin route (login user)
 app.post("/api/v1/signin", async (req, res) => {
   const { email, password } = req.body;
@@ -65,7 +102,7 @@ app.post("/api/v1/signin", async (req, res) => {
   }
 });
 
-app.get("/api/v1/contacts", async (req, res) => {
+app.get("/api/v1/contacts",authenticate , async (req, res) => {
   try {
     const contacts = await Contact.find();
     if (contacts.length === 0) {
@@ -95,7 +132,7 @@ const authenticate = (req, res, next) => {
   }
 };
 
-app.post("/api/v1/create-contact", authenticate, async (req, res) => {
+app.post("/api/v1/create-contact",authenticate,  async (req, res) => {
   const { name, number, contactType, link } = req.body;
 
   if (!name) {
