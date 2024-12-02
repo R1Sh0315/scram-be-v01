@@ -40,7 +40,7 @@ app.get("/api/v1/contacts", (req, res) => {
     .status(200);
 });
 
-app.post("/create-contact", async (req, res) => {
+app.post("api/v1/create-contact", async (req, res) => {
   const { name, number, contactType, link } = req.body;
 
   if (!name) {
