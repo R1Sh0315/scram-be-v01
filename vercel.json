@@ -1,10 +1,5 @@
 {
   "version": 2,
-  "builds": [{ "src": "index.js", "use": "@vercel/node" }],
-  "routes": [
-    { "src": "/create-contact", "dest": "index.js" },
-    { "src": "/api/v1/contacts", "dest": "index.js" },
-
-    { "src": "/(.*)", "dest": "index.js" }
-  ]
+  "builds": [{ "src": "./index.js", "use": "@vercel/node" }],
+  "routes": [{ "src": "/(.*)", "dest": "/" }]
 }
