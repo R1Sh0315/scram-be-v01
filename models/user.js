@@ -18,7 +18,7 @@ const userSchema = new mg.Schema({
     unique: true,
     required: true,
     default: function () {
-      return mg.Types.ObjectId().toString();
+      return new mg.Types.ObjectId().toString();
     }
   }
 });
