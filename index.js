@@ -1,4 +1,5 @@
 const express = require("express");
+const cors = require("cors");
 const mg = require("mongoose");
 const Contact = require("./models/contact");
 const bodyParser = require("body-parser");
@@ -7,6 +8,7 @@ const { generateToken, verifyToken } = require("./utils/jwt");
 require("dotenv").config();
 
 const app = express();
+app.use(cors());
 app.use(bodyParser.json()); // Middleware to parse JSON bodies
 
 const PORT = process.env.PORT || 3000;
@@ -33,7 +35,6 @@ app.get("/", (req, res) => {
     })
     .status(200);
 });
-
 
 // Signup route (register a new user)
 app.post("/api/v1/signup", async (req, res) => {
@@ -64,10 +65,11 @@ app.post("/api/v1/signup", async (req, res) => {
     });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Error during signup", details: err.message });
+    res
+      .status(500)
+      .json({ error: "Error during signup", details: err.message });
   }
 });
-
 
 // Signin route (login user)
 app.post("/api/v1/signin", async (req, res) => {
@@ -96,7 +98,9 @@ app.post("/api/v1/signin", async (req, res) => {
     });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Error during signin", details: err.message });
+    res
+      .status(500)
+      .json({ error: "Error during signin", details: err.message });
   }
 });
 
@@ -117,8 +121,8 @@ const authenticate = (req, res, next) => {
   }
 };
 
-// contact 
-app.get("/api/v1/contacts",authenticate , async (req, res) => {
+// contact
+app.get("/api/v1/contacts", authenticate, async (req, res) => {
   try {
     const contacts = await Contact.find();
     if (contacts.length === 0) {
@@ -132,8 +136,7 @@ app.get("/api/v1/contacts",authenticate , async (req, res) => {
   }
 });
 
-
-// create-contact 
+// create-contact
 app.post("/api/v1/create-contact", authenticate, async (req, res) => {
   const { name, number, contactType, link } = req.body;
 
@@ -172,10 +175,11 @@ app.post("/api/v1/create-contact", authenticate, async (req, res) => {
       contact: newContact,
     });
   } catch (err) {
-    res.status(500).json({ error: "Error creating contact", details: err.message });
+    res
+      .status(500)
+      .json({ error: "Error creating contact", details: err.message });
   }
 });
-
 
 app.listen(PORT, () => {
   console.log(`Server is running on PORT : ${PORT}`);
