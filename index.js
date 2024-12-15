@@ -122,7 +122,7 @@ const authenticate = (req, res, next) => {
 };
 
 // contact
-app.get("/api/v1/contacts", authenticate, async (req, res) => {
+app.get("/api/v1/contacts", async (req, res) => {
   try {
     const contacts = await Contact.find();
     if (contacts.length === 0) {
