@@ -122,7 +122,7 @@ const authenticate = (req, res, next) => {
 };
 
 // contact
-app.get("/api/v1/contacts", async (req, res) => {
+app.get("/api/v1/contacts", authenticate, async (req, res) => {
   try {
     const contacts = await Contact.find();
     if (contacts.length === 0) {
@@ -137,7 +137,7 @@ app.get("/api/v1/contacts", async (req, res) => {
 });
 
 // create-contact
-app.post("/api/v1/create-contact", authenticate, async (req, res) => {
+app.post("/api/v1/create-contact", async (req, res) => {
   const { name, number, contactType, link } = req.body;
 
   if (!name) {
